@@ -1,0 +1,13 @@
+- name: Apt update
+  apt:
+    update_cache: yes
+    cache_valid_time: 3600
+
+- name: Python3 pip install
+  apt:
+    pkg:
+      - python3.9
+      - python3-pip
+      - ca-certificates
+      - software-properties-common
+    state: latest

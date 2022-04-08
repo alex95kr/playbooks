@@ -1,0 +1,11 @@
+---
+ -  hosts: web
+    become: True
+
+    roles:
+#      - general # install general soft and dependencies
+#      - nginx-tls # install nginx with TLS certificates
+#      - python3 # install python3.9 and pip3
+#      - docker # docker docker-compose install
+#      - nano # nano6 install with syntax highlight
+      - net-tools # install net-tools nmap traceroute
