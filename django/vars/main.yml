@@ -1,0 +1,5 @@
+---
+home_dir: "{{ ansible_env.HOME }}"
+django_cms: django_cms
+django_project: django_project
+server: "{{ hostvars['web'].ansible_enp0s8.ipv4.address }}":8000

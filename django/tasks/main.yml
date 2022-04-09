@@ -1,0 +1,35 @@
+---
+  - roles:
+      - python3
+
+  - name: Create directory django cms
+    ansible.builtit.file:
+      path: "{{ home_dir }}{{ django_cms }}"
+      type: Directory
+
+#  - name: Create venv environment
+#    ansible.builtin.command: python3 -m venv venv
+#      chdir: "{{ django_cms }}"
+
+#  - name: Activate venv
+#    ansible.builtin.command: source venv/bin/avtivate
+#      chdir: "{{ django_cms }}"
+
+#  - name: Django pip install
+#    ansble.builtin.command: pip install django
+#      chdir: "{{ django_cms }}"
+
+#  - name: Create django project
+#    ansible.builtin.command: django-admin startproject "{{ django_project }}"
+#      chdir: "{{ django_cms }}"
+
+#  - name: DB migration
+#    ansible.builtin.command: python manage.py migrate
+#      chdir: "{{ django_cms}}{{ django_project}}"
+
+#  - name: Create superuser db
+#    ansible.builtin.command: python manage.py create superuser
+#      chdir: "{{ django_cms}}{{ django_project}}"
+
+#  - name: add ALLOWED_HOSTS in settings.py
+#  - name: Start server
