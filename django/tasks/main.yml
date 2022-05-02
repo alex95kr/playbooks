@@ -1,11 +1,9 @@
 ---
-  - roles:
-      - python3
 
   - name: Create directory django cms
-    ansible.builtit.file:
-      path: "{{ home_dir }}{{ django_cms }}"
-      type: Directory
+    ansible.builtin.file:
+      path: "{{ home_dir }}/{{ django_cms }}"
+      state: directory
 
 #  - name: Create venv environment
 #    ansible.builtin.command: python3 -m venv venv
