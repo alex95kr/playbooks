@@ -5,6 +5,18 @@
       path: "{{ full_path }}"
       state: directory
 
+
+#  - name: pip install virtualenv
+#    pip:
+#      name: virtualenv
+
+  - name: Create venv environment
+    command: python3 -m venv "{{ django_venv }}"
+    args:
+      chdir: "{{ full_path }}"
+
+
+
   - name: install django in venv dir
     pip:
       name: django
@@ -12,12 +24,41 @@
 
   - name: start new project
     command: "{{ full_path }}/{{ django_venv }}/bin/django-admin startproject {{ django_project }} {{ full_path }}"
+    failed_when: False
+#    register: result
+#    changed_when: ' 
 
-  - name: add local host for settings.py
-    ansible.builtin.replace:
+#  - debug: var=result
+#  - fail:
+  - name: replace string
+    ansible.builtin.lineinfile:
       path: "{{ full_path }}/{{ django_project }}/settings.py"
-      after: 'ALLOWED_HOSTS = []'
-      replace: 'ALLOWED_HOSTS = [127.0.0.1]'
+#      path: /home/vagrant/django_cms/django_project/settings.py
+      regexp: '^ALLOWED_HOSTS'
+      line: ALLOWED_HOSTS = ['*']
+
+  - name: start server
+    become: True
+    shell: "source {{ full_path }}/{{ django_venv }}/bin/activate && python {{ full_path }}/manage.py runserver 192.168.0.110:8000"
+
+
+#  - name: remove string
+#    ansible.builtin.lineinfile:
+#      path: /home/vagrant/django_cms/django_project/settings.py
+#      line: 'ALLOWED_HOSTS = []'
+#      state: absent
+
+#  - name: add string
+#    ansible.builtin.lineinfile:
+#      path: "{{ full_path }}/{{ django_project }}/settings.py"
+
+
+
+#  - name: add local host for settings.py
+#    replace:
+#      path: "{{ full_path }}/{{ django_project }}/settings.py"
+#      regexp: 'ALLOWED_HOSTS = []'
+#      replace: 'ALLOWED_HOSTS = [127.0.0.1]'
 
 #  - name: Create venv environment
 #    command: python3 -m venv "{{ django_venv }}"
