@@ -5,17 +5,13 @@
       path: "{{ full_path }}"
       state: directory
 
-
-#  - name: pip install virtualenv
-#    pip:
-#      name: virtualenv
-
   - name: Create venv environment
     command: python3 -m venv "{{ django_venv }}"
     args:
       chdir: "{{ full_path }}"
-
-
+    register: result
+  - debug: var=result
+#    changed_when: result.rc == 0
 
   - name: install django in venv dir
     pip:
@@ -25,72 +21,18 @@
   - name: start new project
     command: "{{ full_path }}/{{ django_venv }}/bin/django-admin startproject {{ django_project }} {{ full_path }}"
     failed_when: False
-#    register: result
-#    changed_when: ' 
-
+    register: result
 #  - debug: var=result
-#  - fail:
+    changed_when: result.rc == 0
+
   - name: replace string
     ansible.builtin.lineinfile:
       path: "{{ full_path }}/{{ django_project }}/settings.py"
-#      path: /home/vagrant/django_cms/django_project/settings.py
       regexp: '^ALLOWED_HOSTS'
       line: ALLOWED_HOSTS = ['*']
 
-  - name: start server
-    become: True
-    shell: "source {{ full_path }}/{{ django_venv }}/bin/activate && python {{ full_path }}/manage.py runserver 192.168.0.110:8000"
-
-
-#  - name: remove string
-#    ansible.builtin.lineinfile:
-#      path: /home/vagrant/django_cms/django_project/settings.py
-#      line: 'ALLOWED_HOSTS = []'
-#      state: absent
-
-#  - name: add string
-#    ansible.builtin.lineinfile:
-#      path: "{{ full_path }}/{{ django_project }}/settings.py"
-
-
-
-#  - name: add local host for settings.py
-#    replace:
-#      path: "{{ full_path }}/{{ django_project }}/settings.py"
-#      regexp: 'ALLOWED_HOSTS = []'
-#      replace: 'ALLOWED_HOSTS = [127.0.0.1]'
-
-#  - name: Create venv environment
-#    command: python3 -m venv "{{ django_venv }}"
-#    args:
-#      chdir: "{{ full_path }}"
-
-#  - name: Activate venv
+#  - name: start server
 #    become: True
-#    command: source "{{ full_path }}/{{ django_venv }}"/bin/activate
-#    shell: . activate
+#    shell: "source {{ full_path }}/{{ django_venv }}/bin/activate && python {{ full_path }}/manage.py runserver 192.168.0.110:8000"
 #    args:
-#      chdir: "{{ full_path }}/{{ django_venv }}/bin"
 #      executable: /usr/bin/bash
-
-#  - name: Django pip install
-#    command: pip install django
-    #  chdir: "{{ $PWD }}"
-
-#  - name: test version
-#    command: django-admin --version
-
-#  - name: Create django project
-#    ansible.builtin.command: django-admin startproject "{{ django_project }}"
-#      chdir: "{{ django_cms }}"
-
-#  - name: DB migration
-#    ansible.builtin.command: python manage.py migrate
-#      chdir: "{{ django_cms}}{{ django_project}}"
-
-#  - name: Create superuser db
-#    ansible.builtin.command: python manage.py create superuser
-#      chdir: "{{ django_cms}}{{ django_project}}"
-
-#  - name: add ALLOWED_HOSTS in settings.py
-#  - name: Start server
