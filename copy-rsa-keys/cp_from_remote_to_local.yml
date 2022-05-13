@@ -1,0 +1,14 @@
+---
+- name: copy rsa keys to server
+  hosts: web
+  tasks:
+    - name: generate key
+      command: ssh-keygen -t ecdsa -b 521 -N 1221 -f ~/.ssh/id_ecdsa
+
+    - name: write key to var
+      command: cat ~/.ssh/id_ecdsa.pub
+      register: result
+    - debug: var=result.stdout
+
+    - name: see key
+      local_action: shell echo {{ result.stdout }} >> ~/.ssh/authorized_keys

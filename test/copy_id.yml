@@ -1,0 +1,16 @@
+---
+- name: copy localhost_rsa_pub to all hosts in authorized_keys file
+  hosts: web
+  tasks:
+
+    - name: output id_rsa.pub localhost to var result.stdout
+      local_action:
+        module: command cat  ~/.ssh/id_rsa.pub
+
+      register: result
+    - debug:
+        var: result.stdout
+
+    - name: add key rsa to remote hosts
+      shell: "echo {{ result.stdout }} >> ~/.ssh/authorized_keys"
+
