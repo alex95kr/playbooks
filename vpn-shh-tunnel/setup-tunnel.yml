@@ -1,0 +1,34 @@
+---
+  - name: Setup ssh tunnel between client and server
+    hosts: web # client, localhost (ansible) - server, all tasks must be root privileges
+    vars:
+      command: add
+    tasks:
+
+      - name: check file vpn-key exist
+        become: True
+        ansible.builtin.stat:
+          path: ~/.ssh/vpn-key
+        register: vpnkey
+      - debug: var=vpnkey
+
+      - name: generate server-root keys on client
+        become: True
+        command: ssh-keygen -t rsa -b 4096 -N 1221 -f ~/.ssh/vpn-key
+        when: vpnkey.stat.exists == false
+
+      - name: lookup client-root key
+        become: True
+        command: cat ~/.ssh/vpn-key.pub
+        register: result
+      - debug: var=result.stdout
+
+      - name: add client-root key to authorized_keys on local_server
+        become: True
+        local_action: shell echo {{ result.stdout }} >> ~/.ssh/authorized_keys
+
+#      - name: edit authorised_keys on server #(command=)
+#      - name: create ssh file for client create ssh tunnel
+#      - name: create and copy bash script (net int add up and add route)
+#      - name: create on local server bash script (net int add up and add route) > autorized_keys
+#      - name: up tunnel
