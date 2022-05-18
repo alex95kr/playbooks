@@ -2,7 +2,8 @@
   - name: Setup ssh tunnel between client and server
     hosts: web # client, localhost (ansible) - server, all tasks must be root privileges
     vars:
-      command: add
+      command: restrict, command="ls"
+      client_string: root@unit-1
     tasks:
 
       - name: check file vpn-key exist
@@ -23,9 +24,30 @@
         register: result
       - debug: var=result.stdout
 
+#      - this work but simple method with grep checking
+#      - name: check key in file authorized_keys on server (localhost)
+#        become: True
+#        local_action: shell grep "{{client_string}}" ~/.ssh/authorized_keys
+#        register: greper
+#        failed_when: False
+#      - debug: var=greper.rc
+
+      - name: check key in file authorized_keys on server (localhost)
+        become: True
+        delegate_to: localhost
+        ansible.builtin.lineinfile:
+          path: ~/.ssh/authorized_keys
+          regexp: root@unit-1$
+          line: 'some'
+          state: present
+        check_mode: yes
+        register: lineinfile
+      - debug: var=lineinfile.msg
+
       - name: add client-root key to authorized_keys on local_server
         become: True
-        local_action: shell echo {{ result.stdout }} >> ~/.ssh/authorized_keys
+        local_action: shell echo {{ command }} {{result.stdout }} >> ~/.ssh/authorized_keys
+        when: lineinfile.msg == "line added"
 
 #      - name: edit authorised_keys on server #(command=)
 #      - name: create ssh file for client create ssh tunnel
