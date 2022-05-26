@@ -3,7 +3,7 @@
     hosts: web # client, localhost (ansible) - server, all tasks must be root privileges
     vars:
 #      command: command='restrict, tunnel="0", command="/home/vagrant/playbooks/vpn-shh-tunnel/tunnel-server.sh"'
-      command: command='restrict,tunnel="0"'
+      command: restrict,tunnel='"0"'
       client_string: root@unit-1
     tasks:
 
@@ -16,7 +16,7 @@
 
       - name: generate server-root keys on client
         become: True
-        command: ssh-keygen -t rsa -b 4096 -N 1221 -f ~/.ssh/vpn-key
+        command: ssh-keygen -t rsa -b 4096 -N "" -f ~/.ssh/vpn-key
         when: vpnkey.stat.exists == false
 
       - name: lookup client-root key
@@ -50,7 +50,7 @@
         local_action: shell echo {{ command }} {{result.stdout }} >> ~/.ssh/authorized_keys
         when: lineinfile.msg == "line added"
 
-      - name: set setting for sshd_config on server
+      - name: set setting for sshd_config on server (multi replacr string)
         become: True
 #        delegate_to: localhost
         ansible.builtin.lineinfile:
@@ -60,8 +60,20 @@
         loop:
           - { regexp: '^#PermitTunnel no', line: 'PermitTunnel point-to-point' }
           - { regexp: '^#PermitRootLogin prohibit-password', line: 'PermitRootLogin yes' }
-        state: present
         notify: reload sshd
+
+      - name: set setting for sshd_config on client (multi replace string)
+        become: True
+        delegate_to: localhost
+        ansible.builtin.lineinfile:
+          path: /etc/ssh/sshd_config
+          regexp: "{{ item.regexp }}"
+          line: "{{ item.line }}"
+        loop:
+          - { regexp: '^#PermitTunnel no', line: 'PermitTunnel point-to-point' }
+          - { regexp: '^#PermitRootLogin prohibit-password', line: 'PermitRootLogin yes' }
+        notify: reload sshd
+
 
 
       - name: ipv4 forwarding enable server
@@ -73,7 +85,11 @@
         command: sysctl -w net.ipv4.ip_forward=1
         delegate_to: localhost
 
- #     - name: copy config to ./ssh client
+      - name: copy config to ssh-folder client
+        become: True
+        ansible.builtin.copy:
+          src: /home/vagrant/playbooks/vpn-shh-tunnel/config
+          dest: /root/.ssh/config
 
       - name: run vpn tunnel on client
         become: True
@@ -86,7 +102,7 @@
 
       - name: setup ip address for tun0 client
         become: True
-        comand: ifconfig tun0 10.1.1.2/30 pointopoint 10.1.1.1
+        command: ifconfig tun0 10.1.1.2/30 pointopoint 10.1.1.1
 
     handlers:
       - name: reload sshd
