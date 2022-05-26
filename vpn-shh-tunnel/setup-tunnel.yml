@@ -2,7 +2,8 @@
   - name: Setup ssh tunnel between client and server
     hosts: web # client, localhost (ansible) - server, all tasks must be root privileges
     vars:
-      command: restrict, command="ls"
+#      command: command='restrict, tunnel="0", command="/home/vagrant/playbooks/vpn-shh-tunnel/tunnel-server.sh"'
+      command: command='restrict,tunnel="0"'
       client_string: root@unit-1
     tasks:
 
@@ -48,6 +49,49 @@
         become: True
         local_action: shell echo {{ command }} {{result.stdout }} >> ~/.ssh/authorized_keys
         when: lineinfile.msg == "line added"
+
+      - name: set setting for sshd_config on server
+        become: True
+#        delegate_to: localhost
+        ansible.builtin.lineinfile:
+          path: /etc/ssh/sshd_config
+          regexp: "{{ item.regexp }}"
+          line: "{{ item.line }}"
+        loop:
+          - { regexp: '^#PermitTunnel no', line: 'PermitTunnel point-to-point' }
+          - { regexp: '^#PermitRootLogin prohibit-password', line: 'PermitRootLogin yes' }
+        state: present
+        notify: reload sshd
+
+
+      - name: ipv4 forwarding enable server
+        become: True
+        command: sysctl -w net.ipv4.ip_forward=1
+
+      - name: ipv4 forwarding enable client
+        become: True
+        command: sysctl -w net.ipv4.ip_forward=1
+        delegate_to: localhost
+
+ #     - name: copy config to ./ssh client
+
+      - name: run vpn tunnel on client
+        become: True
+        command: ssh -Nf vpnserver -w0:0
+
+      - name: setup ip address for tun0 server
+        become: True
+        delegate_to: localhost
+        command: ifconfig tun0 10.1.1.1/30 pointopoint 10.1.1.2
+
+      - name: setup ip address for tun0 client
+        become: True
+        comand: ifconfig tun0 10.1.1.2/30 pointopoint 10.1.1.1
+
+    handlers:
+      - name: reload sshd
+        become: True
+        command: systemctl restart sshd
 
 #      - name: edit authorised_keys on server #(command=)
 #      - name: create ssh file for client create ssh tunnel
