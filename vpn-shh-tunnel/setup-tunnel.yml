@@ -52,7 +52,6 @@
 
       - name: set setting for sshd_config on server (multi replacr string)
         become: True
-#        delegate_to: localhost
         ansible.builtin.lineinfile:
           path: /etc/ssh/sshd_config
           regexp: "{{ item.regexp }}"
@@ -108,9 +107,3 @@
       - name: reload sshd
         become: True
         command: systemctl restart sshd
-
-#      - name: edit authorised_keys on server #(command=)
-#      - name: create ssh file for client create ssh tunnel
-#      - name: create and copy bash script (net int add up and add route)
-#      - name: create on local server bash script (net int add up and add route) > autorized_keys
-#      - name: up tunnel
