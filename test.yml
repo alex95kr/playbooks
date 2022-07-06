@@ -1,0 +1,18 @@
+---
+- name: tests
+  become: True
+  hosts: web
+  tasks:
+
+    - name: task1
+#      debug: var=ansible_facts.hostname
+      set_fact: host="{{ansible_facts.hostname }}"
+    - debug: var=host
+
+    - name: services
+      service_facts:
+#      failed_when: false
+
+    - name: print_services
+      ansible.builtin.debug:
+    - debug: var=ansible_facts.services

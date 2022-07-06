@@ -9,6 +9,7 @@
     command: python3 -m venv "{{ django_venv }}"
     args:
       chdir: "{{ full_path }}"
+    failed_when: False
     register: result
   - debug: var=result
 #    changed_when: result.rc == 0
