@@ -1,0 +1,14 @@
+---
+- name: generate and copy rsa keys from remote hosts to server and add to authorized_keys
+  hosts: web
+  tasks:
+    - name: generate rsa key on remote host
+      command: ssh-keygen -t ecdsa -b 521 -N 1221 -f ~/.ssh/id_ecdsa
+
+    - name: write rsa key to var
+      command: cat ~/.ssh/id_ecdsa.pub
+      register: result
+    - debug: var=result.stdout
+
+    - name: add rsa key to authorized_keys on local_server
+      local_action: shell echo {{ result.stdout }} >> ~/.ssh/authorized_keys

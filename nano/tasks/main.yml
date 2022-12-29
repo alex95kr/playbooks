@@ -1,0 +1,33 @@
+    - name: Apt update
+      apt:
+        update_cache: yes
+        cache_valid_time: 3600
+
+
+    - name: Remove old nano
+      apt:
+        name: nano
+        state: absent
+
+    - name: Unzip nano
+      ansible.builtin.unarchive:
+        src: https://nano-editor.org/dist/v6/nano-6.2.tar.gz
+        dest: "{{ home_dir }}"
+        remote_src: yes
+
+    - name: configure and install nano
+      shell: ./configure --disable-dependency-tracking && make install
+      args:
+       chdir: "{{ home_dir }}nano-6.2/"
+
+    - name: create symlink for nano
+      ansible.builtin.file:
+        src: /usr/local/bin/nano
+        dest: /usr/bin/nano
+        state: link
+
+    - name: create file .nanorc with setting for hightlight
+      ansible.builtin.copy:
+        dest: "{{ home_dir }}.nanorc"
+        content: 'include "/usr/local/share/nano/*.nanorc"'
+

@@ -1,0 +1,46 @@
+---
+  - name: Apt update
+    apt:
+      update_cache: yes
+      cache_valid_time: 3600
+
+  - name: Install apache2 php mod_php
+    apt:
+      pkg:
+        - apache2
+        - php
+        - libapache2-mod-php
+      state: latest
+
+  - name: Install php modules
+    apt:
+      name: "{{ php_modules }}"
+      state: present
+
+  # Apache Configuration
+
+  - name: Create document root
+    ansible.builtin.file:
+      path: "/var/www/{{ http_host }}"
+      state: directory
+      owner: "www-data"
+      group: "www-data"
+      mode: '0755'
+
+  - name: Set up apache virtualHost
+    ansible.builtin.template:
+      src: "files/apache.conf.j2"
+      dest: "/etc/apache2/sites-available/{{ http_conf }}"
+    notify: apache restart
+
+  - name: Enable rewrite module
+    command: /usr/sbin/a2enmod rewrite
+    notify: apache reload
+
+  - name: Enable new site
+    command: /usr/sbin/a2ensite {{ http_conf }}
+    notify: apache reload
+
+  - name: Disable default apache site
+    command: /usr/sbin/a2dissite 000-default.conf
+    notify: apache restart

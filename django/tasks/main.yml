@@ -1,0 +1,65 @@
+---
+# tasks file for django
+  - name: apt update
+    become: True
+    apt:
+      update_cache: yes
+      cache_valid_time: 3600
+
+  - name: check dir exist
+    ansible.builtin.stat:
+      path: "{{ full_path }}/{{ dvenv }}"
+    register: venv
+   
+  - include_role:
+      name: python3
+    when: venv.stat.exists == false
+
+#  - name: install python3 pip venv
+#    become: True
+#    apt:
+#      pkg:
+#        - ca-certificates
+#        - software-properties-common
+#        - python3.9
+#        - python3-pip
+#        - python3-venv
+#      state: latest
+
+  - name: create dir for django project
+    ansible.builtin.file:
+      path: "{{ full_path }}"
+      state: directory
+
+#  - name: check dir exist
+#    ansible.builtin.stat:
+#      path: "{{ full_path }}/{{ dvenv }}"
+#    register: venv
+#  - debug: var=test
+
+  - name: install venv
+    command: python3 -m venv "{{ dvenv }}"
+    args:
+      chdir: "{{ full_path }}"
+    when: venv.stat.exists == false
+
+  - name: install pip django in venv dir
+    pip:
+      name: django
+      virtualenv: "{{ full_path }}/{{ dvenv }}"
+
+  - name: install django project
+    ansible.builtin.shell: ". {{ full_path }}/{{ dvenv }}/bin/activate && django-admin startproject {{ django }} {{ django_project }}"
+    failed_when: false
+
+  - name: change settings.py
+    ansible.builtin.lineinfile:
+      path: "{{ full_path }}/{{ django }}/settings.py"
+      regexp: '^ALLOWED_HOSTS'
+      line: ALLOWED_HOSTS = ['*']
+
+  - name: run server
+    ansible.builtin.shell: ". {{ full_path }}/{{ dvenv }}/bin/activate && python manage.py runserver {{ server }}:{{ port }}"
+    args:
+      chdir: "{{ full_path }}"
+

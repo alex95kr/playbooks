@@ -1,0 +1,9 @@
+Host vpnserver
+HostName 192.168.0.120
+Tunnel point-to-point
+TunnelDevice 0:0
+#PermitLocalCommand yes
+#LocalCommand /root/tunnel-client.sh
+Port 22
+User root
+IdentityFile /root/.ssh/vpn-key

@@ -1,0 +1,5 @@
+---
+# handlers file for resize-logs
+ - name: reload journald
+#  become: True
+   command: systemctl restart systemd-journald

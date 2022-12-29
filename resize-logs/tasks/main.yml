@@ -1,0 +1,32 @@
+---
+#  Clear system from garbage
+
+      - name: clear log journalctl
+        command: "journalctl --vacuum-size={{size}}"
+
+      - name: Find /var/log files with gz extention
+        find:
+          paths: /var/log
+          patterns: '*.gz'
+        register: logz
+
+#      - debug: var=logz.files[0]['path'] - accessing a variable array
+
+      - name: remove gz on /var/log
+        become: True
+        ansible.builtin.file:
+          path: "{{ item.path }}" # ! access to logz.files.path var
+          state: absent
+        with_items: "{{ logz.files }}"
+        when: logz.matched >= 1
+
+      - name: set size log on journald
+        become: True
+        ansible.builtin.lineinfile:
+          path: /etc/systemd/journald.conf
+          regexp: "{{ item.regexp }}"
+          line: "{{ item.line }}"
+        loop:
+          - { regexp: '^#SystemMaxUse=', line: 'SystemMaxUse={{size}}' }
+
+        notify: reload journald

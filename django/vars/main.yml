@@ -1,0 +1,12 @@
+---
+# vars file for django
+home_dir: "{{ ansible_env.HOME }}" #user home dir
+django_project: django_projects # folder for work (projects)
+full_path: "{{ home_dir }}/{{ django_project }}" #path where manage.py
+dvenv: dvenv # virlual venv project folder (venv nam here)
+django: tester #working django folder (project name here)
+#server: "{{ hostvars.[inventory_hostname].ansible_enp0s8.ipv4.address }}:{{ port }}"
+#server: "{{ hostvars[inventory_hostname]['ansible_default_ipv4']['address']:8000 }}"
+#work server: "{{ hostvars[inventory_hostname]['ansible_default_ipv4']['address'] }}"
+server: "{{ hostvars[inventory_hostname]['ansible_enp0s8']['ipv4']['address'] }}"
+port: 8000

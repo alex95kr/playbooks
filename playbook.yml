@@ -1,0 +1,19 @@
+---
+- name: playbook runing
+  become: True
+  hosts: unit1
+  roles:
+    - nano
+#    - docker.io 
+#    - django
+#    - dnsmasq
+#    roles:
+#      - resize-logs # reduce logs to 10M and more free space
+#      - general # install general soft and dependencies
+#      - nginx-tls # install nginx with TLS certificates
+#      - python3 # install python3.9 and pip3
+#      - docker # docker docker-compose install
+#      - nano # nano6 install with syntax highlight
+#      - net-tools # install net-tools nmap traceroute
+#      - apache2 # install apache2 with php modules
+#      - django # install django + python3 +venv

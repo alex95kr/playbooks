@@ -1,0 +1,53 @@
+---
+# tasks file for docker.io
+
+  - name: apt update
+    become: True
+    apt: 
+      update_cache: yes
+      cache_valid_time: 3600
+
+# wired wersion with_items
+#  - name: install packages
+#    ansible.builtin.apt: 
+#      name: "{{ item }}" 
+#      state: present
+#    with_items: 
+#      - python-passlib 
+#      - apache2-utils
+
+
+  - name: install packages
+    become: true
+    ansible.builtin.apt:
+      pkg:
+        - ca-certificates
+        - software-properties-common        
+        - docker.io
+        - docker-compose
+      state: latest
+
+  - name: create json file for access to local docker registry
+    become: true
+    ansible.builtin.copy:
+      dest: /etc/docker/daemon.json
+      content: |
+        {
+            "insecure-registries" : ["ubuntu.test:5000"]
+        }
+    notify: docker restart
+
+  - name: add curent user for group docker
+    become: true
+    ansible.builtin.user:
+      name: "{{ ansible_user }}"
+      groups: docker
+      append: yes
+#    register: groupsadd
+
+#  - debug: var=groupsadd
+#
+#  - name : reload file .bashrc with source
+#    ansible.builtin.shell: source ~/.bashrc
+#    args:
+#       executable: /bin/bash

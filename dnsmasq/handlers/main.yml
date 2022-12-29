@@ -1,0 +1,11 @@
+---
+# handlers file for dnsmasq
+  - name: dnsmasq restart
+    ansible.builtin.service:
+      name: dnsmasq
+      state: restarted
+
+  - name: systemd-resolved restart
+    ansible.builtin.service:
+      name: systemd-resolved
+      state: restarted

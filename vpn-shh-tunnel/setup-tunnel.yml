@@ -1,0 +1,109 @@
+---
+  - name: Setup ssh tunnel between client and server
+    hosts: web # client, localhost (ansible) - server, all tasks must be root privileges
+    vars:
+#      command: command='restrict, tunnel="0", command="/home/vagrant/playbooks/vpn-shh-tunnel/tunnel-server.sh"'
+      command: restrict,tunnel='"0"'
+      client_string: root@unit-1
+    tasks:
+
+      - name: check file vpn-key exist
+        become: True
+        ansible.builtin.stat:
+          path: ~/.ssh/vpn-key
+        register: vpnkey
+      - debug: var=vpnkey
+
+      - name: generate server-root keys on client
+        become: True
+        command: ssh-keygen -t rsa -b 4096 -N "" -f ~/.ssh/vpn-key
+        when: vpnkey.stat.exists == false
+
+      - name: lookup client-root key
+        become: True
+        command: cat ~/.ssh/vpn-key.pub
+        register: result
+      - debug: var=result.stdout
+
+#      - this work but simple method with grep checking
+#      - name: check key in file authorized_keys on server (localhost)
+#        become: True
+#        local_action: shell grep "{{client_string}}" ~/.ssh/authorized_keys
+#        register: greper
+#        failed_when: False
+#      - debug: var=greper.rc
+
+      - name: check key in file authorized_keys on server (localhost)
+        become: True
+        delegate_to: localhost
+        ansible.builtin.lineinfile:
+          path: ~/.ssh/authorized_keys
+          regexp: root@unit-1$
+          line: 'some'
+          state: present
+        check_mode: yes
+        register: lineinfile
+      - debug: var=lineinfile.msg
+
+      - name: add client-root key to authorized_keys on local_server
+        become: True
+        local_action: shell echo {{ command }} {{result.stdout }} >> ~/.ssh/authorized_keys
+        when: lineinfile.msg == "line added"
+
+      - name: set setting for sshd_config on server (multi replacr string)
+        become: True
+        ansible.builtin.lineinfile:
+          path: /etc/ssh/sshd_config
+          regexp: "{{ item.regexp }}"
+          line: "{{ item.line }}"
+        loop:
+          - { regexp: '^#PermitTunnel no', line: 'PermitTunnel point-to-point' }
+          - { regexp: '^#PermitRootLogin prohibit-password', line: 'PermitRootLogin yes' }
+        notify: reload sshd
+
+      - name: set setting for sshd_config on client (multi replace string)
+        become: True
+        delegate_to: localhost
+        ansible.builtin.lineinfile:
+          path: /etc/ssh/sshd_config
+          regexp: "{{ item.regexp }}"
+          line: "{{ item.line }}"
+        loop:
+          - { regexp: '^#PermitTunnel no', line: 'PermitTunnel point-to-point' }
+          - { regexp: '^#PermitRootLogin prohibit-password', line: 'PermitRootLogin yes' }
+        notify: reload sshd
+
+
+
+      - name: ipv4 forwarding enable server
+        become: True
+        command: sysctl -w net.ipv4.ip_forward=1
+
+      - name: ipv4 forwarding enable client
+        become: True
+        command: sysctl -w net.ipv4.ip_forward=1
+        delegate_to: localhost
+
+      - name: copy config to ssh-folder client
+        become: True
+        ansible.builtin.copy:
+          src: /home/vagrant/playbooks/vpn-shh-tunnel/config
+          dest: /root/.ssh/config
+
+      - name: run vpn tunnel on client
+        become: True
+        command: ssh -Nf vpnserver -w0:0
+
+      - name: setup ip address for tun0 server
+        become: True
+        delegate_to: localhost
+        command: ifconfig tun0 10.1.1.1/30 pointopoint 10.1.1.2
+
+      - name: setup ip address for tun0 client
+        become: True
+        command: ifconfig tun0 10.1.1.2/30 pointopoint 10.1.1.1
+
+    handlers:
+      - name: reload sshd
+        become: True
+        command: systemctl restart sshd

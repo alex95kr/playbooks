@@ -1,0 +1,53 @@
+---
+# tasks file for dnsmasq
+ - name: apt update
+   become: True
+   apt:
+     update_cache: yes
+     cache_valid_time: 3600  
+  
+ - name: install dnsmasq
+   become: True 
+   apt: 
+     name: dnsmasq
+     state: present
+ 
+ - name: add hosts to file 
+   become: True
+   ansible.builtin.lineinfile:
+     path: /etc/hosts
+     insertbefore: BOF
+     line: "{{ item }}"
+   with_items:
+     - '192.168.2.112   unit3'
+     - '192.168.2.111   unit2'
+     - '192.168.2.110   unit1'
+     - '192.168.2.120   ubuntu'
+     - '127.0.0.1	localhost'
+
+ - name: copy resolv.conf
+   become: True
+   ansible.builtin.copy:
+     src: files/resolv.conf
+     dest: /etc/resolv.conf
+     mode: '0777'
+
+ - name: copy settings to dnsmasq.conf
+   become: True
+   ansible.builtin.copy:
+     src: files/dnsmasq.conf
+     dest: /etc/dnsmasq.conf
+     mode: '0644'
+
+ - name: stop resolved service
+   become: true
+   ansible.builtin.service:
+     name: systemd-resolved
+     state: stoped
+   notify: dnsmasq restart
+
+ - name: disable resolved servie
+   become: true
+   ansible.builtin.service:
+     name: systemd-resolved
+     disable: yes
