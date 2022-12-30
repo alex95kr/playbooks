@@ -15,7 +15,7 @@
 
 - name: Create directories for ssl sertificates
   ansible.builtin.file:
-    path: /etc/nginx/ssl
+    path: "{{ key_dir }}"
     state: directory
 
 - name: Generate SSL certs on remote host
