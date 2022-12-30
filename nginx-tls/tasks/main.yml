@@ -1,0 +1,60 @@
+---
+# Config nginx with TLS
+
+- name: Apt update
+  apt:
+    update_cache: yes
+    cache_valid_time: 3600
+
+- name: Install nginx
+  apt:
+    name: nginx
+    state: latest
+  notify:
+    - nginx start
+
+- name: Create directories for ssl sertificates
+  ansible.builtin.file:
+    path: /etc/nginx/ssl
+    state: directory
+
+- name: Generate SSL certs on remote host
+  command: >
+         openssl req -x509 -nodes -days 3650 -newkey rsa:2048
+          -subj /CN=localhost -keyout nginx.key -out nginx.crt
+  args:
+    chdir: "{{ key_dir }}"
+  notify:
+    - nginx restart
+
+- name: Change permission on nginx.key
+  ansible.builtin.file:
+    path: /etc/nginx/ssl/nginx.key
+    mode: 0600
+    owner: root
+  notify:
+    - nginx restart
+
+- name: Copy nginx config file
+  ansible.builtin.template:
+    src: templates/nginx.conf.j2
+    dest: "{{ conf_file }}"
+  notify:
+    - nginx restart
+
+
+- name: Enable configuration
+  ansible.builtin.file:
+    src: "{{ conf_file }}"
+    dest: /etc/nginx/sites-enabled/default
+    state: link
+  notify:
+    - nginx restart
+
+- name: Copy index.htm
+  ansible.builtin.template:
+    src: templates/index.html.j2
+    dest: /usr/share/nginx/html/index.html
+    mode: 0644
+  notify:
+    - nginx restart
