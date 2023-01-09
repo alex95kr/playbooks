@@ -5,31 +5,108 @@
 
   - name: deploy (N)ginx, (G)unicorn, (D)jango, (P)ostgress and my_(A)pp
     hosts: unit1
+
     vars:
-      repo_url: git@github.com:
-      proj_name: 'tester'
+      repo_url: git@github.com:alex95kr/my_app.git
+      proj_name: tester
       project_path: "{{ ansible_env.HOME }}/{{ proj_name }}"
+      app_path: "{{ ansible_env.HOME }}/{{ proj_name }}/my_app"
       virtualenv_path: "{{ project_path }}/.venv"
+      requs_ath: "{{project_path }}/requirements.txt"
       locale: en_US.UTF-8
       tls_enabled: true
       database_name: "{{ db_pass }}" #secret file
       database_user: "{{ db_name }}" #secret file
       database_host: localhost
       database_port: 5432
-    var_files:
+    vars_files:
       - secret.yml
 
     tasks:
 
-    - name: first task
+      - name: Update apt and install packages
+        become: True
+        apt:
+          update_cache: True
+          cache_valid_time: 3600
+          pkg:
+            - acl
+            - git
+            - libjpeg-dev
+            - libpq-dev
+            - memcached
+            - nginx
+            - postgresql
+            - python3-dev
+            - python3-pip
+            - python3-venv
+            - python3-psycopg2
+
+      - name: create dir for project
+        ansible.builtin.file:
+          path: "{{ project_path }}"
+          state: directory
+          mode: 0755
+
+      - name: fetch repo my_app from git
+        ansible.builtin.git:
+          repo: "{{ repo_url }}"
+          dest: "{{ project_path }}"
+          accept_hostkey: True
+#          version: main
+          update: False
+
+      - name: create dir for logs
+        ansible.builtin.file:
+          path: "{{ project_path }}/logs"
+          state: directory
+          mode: 0755
 
 
+      - name: install pip in venv (django and unicorn)
+        ansible.builtin.pip:
+          name:
+            - django
+            - gunicorn
+          virtualenv: "{{ virtualenv_path }}"
+          state: latest
+
+#    - name: install pip with requirements.txt
+#      ansible.builtin.pip:
+#        virtualenv: "{{ virtualenv_path }}"
+#        requirements: "{{ reqs_path }}"
+
+#      - name: fetch repo my_app from git
+#        ansible.builtin.git:
+#          repo: "{{ repo_url }}"
+#          dest: "{{ app_path }}"
+#          accept_hostkey: True
+#          version: main
+#          update: False
+
+
+#    - name:
+#    - name:
+#    - name:
+#    - name:
+#    - name:
+#    - name:
+#    - name:
+#    - name:
+#    - name:
+#    - name:
+#    - name:
+#    - name:
+#    - name:
+
+
+#create dir project_app, logs
 #install soft
 #install virtualenv
-#create project_app, logs
 #install pip (gunicorn, django)
+
 #set settings for gunicorn (from template)
-#set settings for django_project (from template)
+#set settings for django_project (from template) and settings.py
 #set settings for nginx (template)
 #fetch from git my_app
 #install db and create user
@@ -42,3 +119,4 @@
 #reload daemons and restart systemd
 
 #    handlers:
+
