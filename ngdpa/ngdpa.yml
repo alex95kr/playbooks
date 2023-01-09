@@ -1,0 +1,44 @@
+---
+# tasks file for ngdpa
+# deploy nginx as proxy, gunicorn, django, postgress db and my_app from repo
+# deploy in virualenv
+
+  - name: deploy (N)ginx, (G)unicorn, (D)jango, (P)ostgress and my_(A)pp
+    hosts: unit1
+    vars:
+      repo_url: git@github.com:
+      proj_name: 'tester'
+      project_path: "{{ ansible_env.HOME }}/{{ proj_name }}"
+      virtualenv_path: "{{ project_path }}/.venv"
+      locale: en_US.UTF-8
+      tls_enabled: true
+      database_name: "{{ db_pass }}" #secret file
+      database_user: "{{ db_name }}" #secret file
+      database_host: localhost
+      database_port: 5432
+    var_files:
+      - secret.yml
+
+    tasks:
+
+    - name: first task
+
+
+#install soft
+#install virtualenv
+#create project_app, logs
+#install pip (gunicorn, django)
+#set settings for gunicorn (from template)
+#set settings for django_project (from template)
+#set settings for nginx (template)
+#fetch from git my_app
+#install db and create user
+#create nginx tls serts and remove default config file and enable site
+
+#django create db and create migration
+
+
+#install systemd-unit for gunicorn
+#reload daemons and restart systemd
+
+#    handlers:
