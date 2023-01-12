@@ -24,7 +24,7 @@ Example Playbook
 
   hosts: unit1
 
-  roles:
+  roles:  
     - nginx-site
 
 License
