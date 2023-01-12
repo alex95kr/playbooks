@@ -1,7 +1,8 @@
 nginx-site
 =========
 
-Deploy site (example) to www folder and make config (ssl optional) for nginx 
+Deploy you site (example.com) to www folder and make config (ssl optional) for nginx 
+and run your site with ssl
 
 Requirements
 ------------
