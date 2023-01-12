@@ -5,8 +5,6 @@
 
   roles:
     - role: nginx-site
-      vars:
-        site_name: "tester"
 
 
 #    - nginx-tls #install nginx server with ssl sertificates  
