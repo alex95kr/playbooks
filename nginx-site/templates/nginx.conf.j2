@@ -1,16 +1,31 @@
 server {
-     listen 80 http;
-     {{ if tls_enabled }}
-     listen 443 ssl;
 
+    listen 80;
+    server_tokens off;
+    client_max_body_size 10M;
+    keepalive_timeout    15;
+
+     {% if tls_enabled %}
+
+     listen 443 ssl;
+     ssl_certificate {{ crt_file }};
+     ssl_certificate_key {{ key_file }};
+     ssl_session_tickets off;
+     ssl_session_cache    shared:SSL:10m;
+     ssl_session_timeout  10m;
+     ssl_ciphers ECDHE-RSA-AES256-GCM-SHA512:DHE-RSA-AES256-GCM-SHA512:ECDHE-RSA-AES256-GCM-SHA384:DHE-RSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-SHA384;
+     ssl_prefer_server_ciphers on;
+
+     {% endif %}
+
+     server_name {{ site_name }};    
      root {{ path_www }};
-     index index.html index htm; 
+     index index.html index.htm; 
      access_log {{ path_logs }}/access.log;
      error_log {{ path_logs }}/error.log;
 
 
-server_name {{ site_name }};
      location / {
-     try_files uri$ uri$/ =404;
+     try_files $uri $uri/ =404;
                 }
 }

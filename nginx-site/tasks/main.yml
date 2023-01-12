@@ -1,16 +1,17 @@
 ---
 # tasks file for nginx-site
 
-  - name: apt update
-    become: True
-    apt:
-      update_cache: yes
-      cache_valid_time: 3600
+#  - name: apt update
+#    become: True
+#    apt:
+#      update_cache: yes
+#      cache_valid_time: 3600
 
   - name: install nginx
     apt:
       name: nginx
       state: latest
+    notify: nginx start
 
   - name: make dir for www/html site
     become: True
@@ -26,12 +27,13 @@
       state: directory
       mode: 0755
 
-  - name: make dir for site cers
+  - name: make dir for site certs
     become: True
     ansible.builtin.file:
       path: "{{ path_nginx_crt }}"
       state: directory
       mode: 0755
+    when: tls_enabled
 
   - name: copy site to www/site/html
     become: True
@@ -40,6 +42,13 @@
       dest: "{{ path_www }}/index.html"
       mode: 0644
 
+  - name: check cert key file for exist
+    ansible.builtin.stat:
+      path: "{{ key_file }}"
+    register: var_key_file
+
+#  - debug: var=var_key_file
+
   - name: Create tls certificates
     become: true
     command: >
@@ -47,13 +56,14 @@
        -keyout {{ site_name }}.key -subj '/CN={{ site_name }}' -days 365
     args:
       chdir: "{{ path_nginx_crt }}"
-    when: tls_enabled
+    when: tls_enabled == true and var_key_file.stat.exists == false
     notify: nginx restart
 
   - name: set right on key file
     ansible.builtin.file:
       path: "{{ key_file }}"
       mode: 0600
+    when: tls_enabled
 
   - name: set current owner to www folder
 #    become: True
@@ -63,7 +73,22 @@
       group: "{{ ansible_user }}"
       recurse: yes
 
-#  - name: copy site.conf to site-available from template
+  - name: copy site.conf to site-available from template
+#    become: True
+    ansible.builtin.template:
+      src: templates/nginx.conf.j2
+      dest: "{{ path_nginx_available }}/{{ site_name }}.conf"
+      mode: 0644
+
+  - name: set link to site_ensbled
+ #   become: True
+    ansible.builtin.file:
+      src: "{{ path_nginx_available }}/{{ site_name }}.conf"
+      dest: "{{ path_nginx_enable }}/{{ site_name }}.conf"
+      state: link
+    notify: nginx restart
+
+
 #  - name: set link to site-enabled
 #  - name: reload nginx on handlers file
 # ! if certs ready - dont start task - optional

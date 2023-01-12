@@ -1,7 +1,7 @@
-Role Name
+nginx-site
 =========
 
-A brief description of the role goes here.
+Deploy site (example) to www folder and make config (ssl optional) for nginx 
 
 Requirements
 ------------
@@ -21,11 +21,10 @@ A list of other roles hosted on Galaxy should go here, plus any details in regar
 Example Playbook
 ----------------
 
-Including an example of how to use your role (for instance, with variables passed in as parameters) is always nice for users too:
+  hosts: unit1
 
-    - hosts: servers
-      roles:
-         - { role: username.rolename, x: 42 }
+  roles:
+    - role: nginx-site
 
 License
 -------

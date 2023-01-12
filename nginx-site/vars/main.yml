@@ -1,7 +1,7 @@
 ---
 # vars file for nginx-site
 tls_enabled: True
-site_name: my_site
+site_name: secondsite.com
 path_logs: "/var/log/nginx/{{ site_name }}"
 path_www_root: "/var/www/{{ site_name }}"
 path_www: "/var/www/{{ site_name }}/html"
