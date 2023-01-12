@@ -1,0 +1,69 @@
+---
+# tasks file for nginx-site
+
+  - name: apt update
+    become: True
+    apt:
+      update_cache: yes
+      cache_valid_time: 3600
+
+  - name: install nginx
+    apt:
+      name: nginx
+      state: latest
+
+  - name: make dir for www/html site
+    become: True
+    ansible.builtin.file:
+      path: "{{ path_www }}"
+      state: directory
+      mode: 0755
+
+  - name: make dir for nginx site logs
+    become: True
+    ansible.builtin.file:
+      path: "{{ path_logs }}"
+      state: directory
+      mode: 0755
+
+  - name: make dir for site cers
+    become: True
+    ansible.builtin.file:
+      path: "{{ path_nginx_crt }}"
+      state: directory
+      mode: 0755
+
+  - name: copy site to www/site/html
+    become: True
+    ansible.builtin.template:
+      src: templates/index.html.j2
+      dest: "{{ path_www }}/index.html"
+      mode: 0644
+
+  - name: Create tls certificates
+    become: true
+    command: >
+       openssl req -new -x509 -nodes -out {{ site_name }}.crt
+       -keyout {{ site_name }}.key -subj '/CN={{ site_name }}' -days 365
+    args:
+      chdir: "{{ path_nginx_crt }}"
+    when: tls_enabled
+    notify: nginx restart
+
+  - name: set right on key file
+    ansible.builtin.file:
+      path: "{{ key_file }}"
+      mode: 0600
+
+  - name: set current owner to www folder
+#    become: True
+    ansible.builtin.file:
+      path: "{{ path_www_root }}"
+      owner: "{{ ansible_user }}"
+      group: "{{ ansible_user }}"
+      recurse: yes
+
+#  - name: copy site.conf to site-available from template
+#  - name: set link to site-enabled
+#  - name: reload nginx on handlers file
+# ! if certs ready - dont start task - optional

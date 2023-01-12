@@ -1,0 +1,16 @@
+server {
+     listen 80 http;
+     {{ if tls_enabled }}
+     listen 443 ssl;
+
+     root {{ path_www }};
+     index index.html index htm; 
+     access_log {{ path_logs }}/access.log;
+     error_log {{ path_logs }}/error.log;
+
+
+server_name {{ site_name }};
+     location / {
+     try_files uri$ uri$/ =404;
+                }
+}

@@ -2,9 +2,14 @@
 - name: playbook runing
   become: True
   hosts: unit1
-  roles:
 
-    - nginx-tls #install nginx server with ssl sertificates  
+  roles:
+    - role: nginx-site
+      vars:
+        site_name: "tester"
+
+
+#    - nginx-tls #install nginx server with ssl sertificates  
 #    - nano # install nano 6.2 with hightlight
 #    - docker.io # install latest docker 
 #    - django # install django in venv environment
