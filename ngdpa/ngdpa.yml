@@ -8,13 +8,18 @@
 
     vars:
       repo_url: git@github.com:alex95kr/my_app.git
-      proj_name: tester
+      proj_name: django_test
       project_path: "{{ ansible_env.HOME }}/{{ proj_name }}"
       app_path: "{{ ansible_env.HOME }}/{{ proj_name }}/my_app"
       virtualenv_path: "{{ project_path }}/.venv"
-      requs_ath: "{{project_path }}/requirements.txt"
+      reqs_path: "{{project_path }}/requirements.txt"
+      logs_path: "{{ project_path }}/logs"
+*
+      cert_path: "{{project_path }}/cert"
+      crt_file: "{{ cert_path }}/{{ proj_name }}.crt"
+      key_file: "{{ cert_path }}/{{ proj_name }}.key"
       locale: en_US.UTF-8
-      tls_enabled: true
+      tls_enabled: True
       database_name: "{{ db_pass }}" #secret file
       database_user: "{{ db_name }}" #secret file
       database_host: localhost
@@ -58,9 +63,45 @@
 
       - name: create dir for logs
         ansible.builtin.file:
-          path: "{{ project_path }}/logs"
+          path: "{{ logs_path }}"
           state: directory
           mode: 0755
+
+
+      - name: make dir for site certs
+        become: True
+        ansible.builtin.file:
+          path: "{{ cert_path }}"
+          state: directory
+          mode: 0755
+        when: tls_enabled
+
+      - name: check cert key file for exist
+        ansible.builtin.stat:
+          path: "{{ key_file }}"
+        register: var_key_file
+
+#  - debug: var=var_key_file
+
+      - name: Create tls certificates
+        become: true
+        command: >
+           openssl req -new -x509 -nodes -out {{ proj_name }}.crt
+           -keyout {{ proj_name }}.key -subj '/CN={{ proj_name }}' -days 365
+          args:
+            chdir: "{{ cert_path }}"
+        when: tls_enabled == true and var_key_file.stat.exists == false
+        notify: nginx restart
+
+      - name: set right on key file
+        ansible.builtin.file:
+          path: "{{ key_file }}"
+          mode: 0600
+        when: tls_enabled
+
+
+
+
 
 
       - name: install pip in venv (django and unicorn)
@@ -71,18 +112,21 @@
           virtualenv: "{{ virtualenv_path }}"
           state: latest
 
+#      another way to install pip apps in venv from file requirements.txt
 #    - name: install pip with requirements.txt
 #      ansible.builtin.pip:
 #        virtualenv: "{{ virtualenv_path }}"
 #        requirements: "{{ reqs_path }}"
 
-#      - name: fetch repo my_app from git
-#        ansible.builtin.git:
-#          repo: "{{ repo_url }}"
-#          dest: "{{ app_path }}"
-#          accept_hostkey: True
-#          version: main
-#          update: False
+#      - name:
+
+#  - name: deploy (N)ginx, (G)unicorn, (D)jango, (P)ostgress and my_(A)pp
+
+#- copy nginx conf file and restart nginx
+#- delete default nginx conf file
+
+
+
 
 
 #    - name:
