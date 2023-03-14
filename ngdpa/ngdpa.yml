@@ -2,7 +2,7 @@
 # tasks file for ngdpa
 # deploy nginx as proxy, gunicorn, django, postgress db and my_app from repo
 # deploy in virualenv
-
+# i was here
   - name: deploy (N)ginx, (G)unicorn, (D)jango, (P)ostgress and my_(A)pp
     hosts: unit1
 
